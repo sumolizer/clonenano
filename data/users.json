@@ -1,0 +1,42 @@
+[
+  {
+    "id": "efc43840-390d-4f75-9f10-418190f9c818",
+    "name": "Test Brand User",
+    "email": "test.brand@example.com",
+    "passwordHash": "$2b$10$6rxik65HsLkRZNFh916xrO7lYyp38KECPuK5SNpvt5dLjsEJ1.pTe",
+    "role": "brand",
+    "createdAt": "2026-09-11T19:39:50.922Z"
+  },
+  {
+    "id": "41ed4632-a5b0-4111-b9ee-cbc2f7e4236f",
+    "name": "sadasd",
+    "email": "asdads@gmail.com",
+    "passwordHash": "$2b$10$fqICz.qUyN9ha8Q/dZZzNux8hmzPXqFtB7G1eI81yUxR9JLXugQmK",
+    "role": "creator",
+    "createdAt": "2026-09-11T20:08:21.570Z"
+  },
+  {
+    "id": "9bccadfe-0955-42a0-b906-603bcb89af14",
+    "name": "8x",
+    "email": "8x@gmail.com",
+    "passwordHash": "$2b$10$PTrB.UEGD73uN0S9xEUROeyjcN0FbEQVTjut1z0ojt6SpiAQvS4.K",
+    "role": "brand",
+    "createdAt": "2026-09-11T20:30:57.145Z"
+  },
+  {
+    "id": "3f9c1bdd-0479-414e-8e1e-7637dcdfd09d",
+    "name": "Alyan Chattha",
+    "email": "alyan.dashboard@example.com",
+    "passwordHash": "$2b$10$m6UIlqASdZIQmBddrAgGVufhNfEOcZGevfolmlfLa/4pAeztkUmgC",
+    "role": "creator",
+    "createdAt": "2026-09-11T21:13:49.231Z"
+  },
+  {
+    "id": "39ee296c-edfe-49df-befe-063a249a5331",
+    "name": "QA Brand Tester",
+    "email": "qa.brand.test@example.com",
+    "passwordHash": "$2b$10$QiS2UdSyqV930d2VMR/3MueeqDMG.069aD9puGh/xT9QgcC4oBW0m",
+    "role": "brand",
+    "createdAt": "2026-09-11T21:31:35.973Z"
+  }
+]
