@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (findUserByEmail(email)) {
+  if (await findUserByEmail(email)) {
     return NextResponse.json(
       { error: "An account with this email already exists" },
       { status: 409 }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   const passwordHash = await hashPassword(password);
-  const user = createUser({ name, email, passwordHash, role: role as Role });
+  const user = await createUser({ name, email, passwordHash, role: role as Role });
   const token = signToken({ sub: user.id, email: user.email, role: user.role });
 
   const response = NextResponse.json({ user: toPublicUser(user) }, { status: 201 });

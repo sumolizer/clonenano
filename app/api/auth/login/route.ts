@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "email and password are required" }, { status: 400 });
   }
 
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
   }

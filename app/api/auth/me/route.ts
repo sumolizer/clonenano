@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ user: null });
   }
 
-  const user = findUserById(payload.sub);
+  const user = await findUserById(payload.sub);
   if (!user) {
     return NextResponse.json({ user: null });
   }
