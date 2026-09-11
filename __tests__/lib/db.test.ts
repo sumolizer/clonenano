@@ -154,3 +154,51 @@ describe("createUser / findUserByEmail / findUserById (Upstash Redis — env var
     expect(await db.findUserByEmail("redis@example.com")).toBeDefined();
   });
 });
+
+describe("createUser (KV_REST_API_URL/TOKEN — Vercel Marketplace's actual injected names)", () => {
+  // Vercel's Upstash Marketplace integration injects KV_REST_API_URL/TOKEN
+  // (legacy "Vercel KV" naming), not UPSTASH_REDIS_REST_URL/TOKEN — this is
+  // the exact case that silently fell through to the file store (and broke
+  // in production with EROFS) until useRedis checked for both.
+  const store = new Map<string, unknown>();
+
+  beforeAll(() => {
+    process.env.KV_REST_API_URL = "https://example.upstash.io";
+    process.env.KV_REST_API_TOKEN = "test-token";
+  });
+
+  afterAll(() => {
+    delete process.env.KV_REST_API_URL;
+    delete process.env.KV_REST_API_TOKEN;
+  });
+
+  beforeEach(() => {
+    store.clear();
+    jest.resetModules();
+    jest.doMock("@upstash/redis", () => ({
+      Redis: {
+        fromEnv: () => ({
+          get: jest.fn(async (key: string) => store.get(key) ?? null),
+          set: jest.fn(async (key: string, value: unknown) => {
+            store.set(key, value);
+            return "OK";
+          }),
+        }),
+      },
+    }));
+  });
+
+  it("still uses the Redis path, not the file store", async () => {
+    const db = await import("@/lib/db");
+
+    const created = await db.createUser({
+      name: "KV Named User",
+      email: "kv-named@example.com",
+      passwordHash: "hashed",
+      role: "brand",
+    });
+
+    expect(await db.findUserByEmail("kv-named@example.com")).toEqual(created);
+    expect(store.size).toBeGreaterThan(0);
+  });
+});

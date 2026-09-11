@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import type { Redis } from "@upstash/redis";
+import { Redis } from "@upstash/redis";
 import type { Role } from "@/lib/auth";
 
 export interface User {
@@ -15,22 +15,23 @@ export interface User {
 
 // Serverless hosts (Vercel, etc.) run on a read-only filesystem outside /tmp,
 // and /tmp isn't shared across function instances — the file-based store
-// below only works for local development. In production, point
-// UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN at a real Redis database
-// (e.g. via the Vercel Marketplace) and this switches over automatically.
+// below only works for local development. In production, connect a Redis
+// database (e.g. Vercel Marketplace → Storage → Upstash) and this switches
+// over automatically.
+//
+// Redis.fromEnv() itself already falls back from UPSTASH_REDIS_REST_URL/
+// TOKEN to KV_REST_API_URL/TOKEN — the names Vercel's own Marketplace
+// integration actually injects (legacy "Vercel KV" naming, kept for
+// compatibility). This check has to look for the same two names, or it can
+// end up disagreeing with fromEnv() about whether Redis is configured at all.
 const useRedis = Boolean(
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
+    (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN)
 );
 
-// Imported dynamically (rather than at module top-level) so the file-store
-// path — local dev, and any environment without Upstash configured — never
-// has to load the package at all.
 let redisClient: Redis | null = null;
-async function getRedis(): Promise<Redis> {
-  if (!redisClient) {
-    const { Redis } = await import("@upstash/redis");
-    redisClient = Redis.fromEnv();
-  }
+function getRedis(): Redis {
+  if (!redisClient) redisClient = Redis.fromEnv();
   return redisClient;
 }
 
@@ -70,7 +71,7 @@ function writeUsersFile(users: User[]) {
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
   if (useRedis) {
-    const client = await getRedis();
+    const client = getRedis();
     const id = await client.get<string>(emailKey(email));
     if (!id) return undefined;
     const user = await client.get<User>(idKey(id));
@@ -82,7 +83,7 @@ export async function findUserByEmail(email: string): Promise<User | undefined> 
 
 export async function findUserById(id: string): Promise<User | undefined> {
   if (useRedis) {
-    const client = await getRedis();
+    const client = getRedis();
     const user = await client.get<User>(idKey(id));
     return user ?? undefined;
   }
@@ -105,7 +106,7 @@ export async function createUser(input: {
   };
 
   if (useRedis) {
-    const client = await getRedis();
+    const client = getRedis();
     await client.set(idKey(user.id), user);
     await client.set(emailKey(user.email), user.id);
     return user;
