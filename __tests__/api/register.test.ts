@@ -131,4 +131,23 @@ describe("POST /api/auth/register", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
+
+  it("returns a real JSON error (not a bare crash) when storage throws", async () => {
+    mockCreateUser.mockImplementation(() => {
+      throw new Error("JWT_SECRET must be set in production");
+    });
+
+    const res = await POST(
+      postRequest({
+        name: "Jane Doe",
+        email: "jane@example.com",
+        password: "correcthorsebattery",
+        role: "brand",
+      })
+    );
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toContain("JWT_SECRET must be set in production");
+  });
 });

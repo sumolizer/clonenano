@@ -108,4 +108,16 @@ describe("POST /api/auth/login", () => {
     expect(resNoUser.status).toBe(resBadPassword.status);
     expect(bodyNoUser.error).toBe(bodyBadPassword.error);
   });
+
+  it("returns a real JSON error (not a bare crash) when storage throws", async () => {
+    mockFindUserByEmail.mockImplementation(() => {
+      throw new Error("Upstash Redis request failed");
+    });
+
+    const res = await POST(postRequest({ email: "jane@example.com", password: "whatever123" }));
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toContain("Upstash Redis request failed");
+  });
 });

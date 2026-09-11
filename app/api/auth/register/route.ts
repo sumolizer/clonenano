@@ -31,24 +31,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (await findUserByEmail(email)) {
-    return NextResponse.json(
-      { error: "An account with this email already exists" },
-      { status: 409 }
-    );
+  try {
+    if (await findUserByEmail(email)) {
+      return NextResponse.json(
+        { error: "An account with this email already exists" },
+        { status: 409 }
+      );
+    }
+
+    const passwordHash = await hashPassword(password);
+    const user = await createUser({ name, email, passwordHash, role: role as Role });
+    const token = signToken({ sub: user.id, email: user.email, role: user.role });
+
+    const response = NextResponse.json({ user: toPublicUser(user) }, { status: 201 });
+    response.cookies.set(AUTH_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return response;
+  } catch (err) {
+    console.error("POST /api/auth/register failed:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: `Registration failed: ${message}` }, { status: 500 });
   }
-
-  const passwordHash = await hashPassword(password);
-  const user = await createUser({ name, email, passwordHash, role: role as Role });
-  const token = signToken({ sub: user.id, email: user.email, role: user.role });
-
-  const response = NextResponse.json({ user: toPublicUser(user) }, { status: 201 });
-  response.cookies.set(AUTH_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-  return response;
 }
